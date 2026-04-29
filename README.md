@@ -6,3 +6,8 @@ An automated smart irrigation portal that monitors soil moisture levels using Ar
 - Real-time moisture level readings.
 - Automated pump switching logic based on moisture thresholds.
 - Interactive system logs and manual pump controls.
+
+
+## Hardware Pin Mappings
+- Moisture Sensor: Pin A0
+- Water Valve: Pin D2
