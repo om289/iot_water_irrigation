@@ -11,3 +11,9 @@ An automated smart irrigation portal that monitors soil moisture levels using Ar
 ## Hardware Pin Mappings
 - Moisture Sensor: Pin A0
 - Water Valve: Pin D2
+
+
+## Irrigation Cycles Flow
+1. Read moisture level
+2. Open valve for 5 seconds
+3. Wait 1 hour
