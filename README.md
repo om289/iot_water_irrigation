@@ -17,3 +17,9 @@ An automated smart irrigation portal that monitors soil moisture levels using Ar
 1. Read moisture level
 2. Open valve for 5 seconds
 3. Wait 1 hour
+
+
+## Moisture Trigger Thresholds
+- Dry: < 300
+- Optimal: 300 - 700
+- Wet: > 700
