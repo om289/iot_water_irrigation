@@ -397,22 +397,196 @@
       </div>
     </div>
 
-    <!-- Troubleshooting -->
-    <div class="guide-section" id="guide-troubleshoot">
-      <h3>🛠️ Troubleshooting</h3>
-      <table class="wiring-table">
-        <thead><tr><th>Problem</th><th>Possible Cause</th><th>Fix</th></tr></thead>
-        <tbody>
-          <tr><td>LED matrix blank</td><td>Wrong wiring or 3.3V power</td><td>Use external 5V for MAX7219, check DIN/CLK/CS pins</td></tr>
-          <tr><td>WiFi won't connect</td><td>Wrong credentials</td><td>Double-check SSID and password, ensure 2.4GHz network</td></tr>
-          <tr><td>Soil readings stuck at 1023</td><td>Sensor not connected</td><td>Check A0 wiring, ensure VCC is powered</td></tr>
-          <tr><td>Pump won't turn on</td><td>Relay wiring or power</td><td>Test relay with LED first, check NO vs NC terminals</td></tr>
-          <tr><td>NodeMCU resets randomly</td><td>Power draw too high</td><td>Use separate 5V supply for pump and LED matrix</td></tr>
-          <tr><td>Garbled serial data</td><td>Baud rate mismatch</td><td>Both devices must use same baud rate (9600)</td></tr>
-          <tr><td>Weather data "N/A"</td><td>API request failing</td><td>Check WiFi, test URL in browser, verify coordinates</td></tr>
-        </tbody>
-      </table>
+    <!-- Cyber Security Section -->
+    <div class="guide-section security-section" id="guide-security">
+      <h3>🛡️ Protection Against Cyber Attacks</h3>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">
+        IoT devices are prime targets for cyber attacks. Here's how SmartPlant protects itself against common threats.
+      </p>
+
+      <!-- Threat Cards -->
+      <h4>⚠️ Common IoT Threats</h4>
+      <div class="threat-grid">
+        <div class="threat-card threat-critical">
+          <div class="threat-icon">🌊</div>
+          <div class="threat-info">
+            <h5>DDoS Attacks</h5>
+            <span class="threat-level critical">CRITICAL</span>
+            <p>Flooding the device with thousands of requests to crash or exhaust its limited memory and CPU.</p>
+          </div>
+        </div>
+        <div class="threat-card threat-high">
+          <div class="threat-icon">👤</div>
+          <div class="threat-info">
+            <h5>Unauthorized Access</h5>
+            <span class="threat-level high">HIGH</span>
+            <p>Anyone on the network could trigger the water pump or send malicious commands to the device.</p>
+          </div>
+        </div>
+        <div class="threat-card threat-high">
+          <div class="threat-icon">🔓</div>
+          <div class="threat-info">
+            <h5>Data Interception</h5>
+            <span class="threat-level high">HIGH</span>
+            <p>Sensor data transmitted in plaintext over WiFi can be sniffed by attackers on the same network.</p>
+          </div>
+        </div>
+        <div class="threat-card threat-medium">
+          <div class="threat-icon">💉</div>
+          <div class="threat-info">
+            <h5>Command Injection</h5>
+            <span class="threat-level medium">MEDIUM</span>
+            <p>Malformed API parameters could overflow buffers or inject unwanted serial commands to Arduino.</p>
+          </div>
+        </div>
+        <div class="threat-card threat-medium">
+          <div class="threat-icon">📡</div>
+          <div class="threat-info">
+            <h5>Replay Attacks</h5>
+            <span class="threat-level medium">MEDIUM</span>
+            <p>Captured HTTP requests (like "WATER") could be replayed to repeatedly trigger the pump.</p>
+          </div>
+        </div>
+        <div class="threat-card threat-low">
+          <div class="threat-icon">🔋</div>
+          <div class="threat-info">
+            <h5>Resource Exhaustion</h5>
+            <span class="threat-level low">LOW</span>
+            <p>Sustained API calls can drain CPU cycles from the LED matrix and weather fetching tasks.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Countermeasures -->
+      <h4>🔐 Security Measures Implemented</h4>
+      <div class="security-measures">
+        <div class="measure-item">
+          <div class="measure-number">1</div>
+          <div class="measure-content">
+            <h5>Rate Limiting (Anti-DDoS)</h5>
+            <p>The firmware limits each IP to <strong>30 requests per 60 seconds</strong>. Beyond this threshold, the server responds with <code>429 Too Many Requests</code> and drops the connection, preserving CPU for critical tasks like sensor polling.</p>
+            <div class="code-snippet">
+              <code>if (requestCount[clientIP] > MAX_REQUESTS_PER_WINDOW) → 429 Too Many Requests</code>
+            </div>
+          </div>
+        </div>
+        <div class="measure-item">
+          <div class="measure-number">2</div>
+          <div class="measure-content">
+            <h5>IP Blacklisting</h5>
+            <p>Clients exceeding <strong>3× the rate limit</strong> are automatically blacklisted for 5 minutes. Blacklisted IPs receive <code>403 Forbidden</code> with zero processing overhead.</p>
+            <div class="code-snippet">
+              <code>if (violations[clientIP] >= 3) → blacklist for 300s → 403 Forbidden</code>
+            </div>
+          </div>
+        </div>
+        <div class="measure-item">
+          <div class="measure-number">3</div>
+          <div class="measure-content">
+            <h5>Input Validation & Sanitization</h5>
+            <p>All API parameters are validated: message text is limited to 100 characters and stripped of control characters. The <code>/api/auto</code> endpoint only accepts "true" or "false" — anything else is rejected.</p>
+            <div class="code-snippet">
+              <code>message.length() ≤ 100 && no control chars && no buffer overflow</code>
+            </div>
+          </div>
+        </div>
+        <div class="measure-item">
+          <div class="measure-number">4</div>
+          <div class="measure-content">
+            <h5>Pump Safety Timeout</h5>
+            <p>Even if an attacker repeatedly triggers watering, the Arduino enforces a <strong>7-second maximum pump runtime</strong> and a <strong>30-second cooldown</strong> between activations — hardware-level protection.</p>
+            <div class="code-snippet">
+              <code>MAX_PUMP_TIME = 7000ms | Cooldown = 30s | Cannot override from network</code>
+            </div>
+          </div>
+        </div>
+        <div class="measure-item">
+          <div class="measure-number">5</div>
+          <div class="measure-content">
+            <h5>CORS & Endpoint Hardening</h5>
+            <p>Cross-Origin requests are controlled. Unknown endpoints return <code>404</code>. The server only responds to <code>GET</code> and <code>POST</code> on defined routes — no directory listing, no file access.</p>
+            <div class="code-snippet">
+              <code>Access-Control headers | Defined routes only | OPTIONS preflight handled</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live DDoS Stress Test -->
+      <h4>⚡ Live DDoS Stress Test</h4>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1rem">
+        Test your SmartPlant's defences by flooding your <strong>own device</strong> with rapid HTTP requests. This demonstrates the rate limiter and IP blacklisting in action.
+      </p>
+
+
+      <div class="stress-test-panel">
+        <!-- Config -->
+        <div class="stress-config">
+          <div class="config-field">
+            <label>Requests/sec</label>
+            <input type="number" id="stress-rps" value="50" min="10" max="200" step="10">
+          </div>
+          <div class="config-field">
+            <label>Duration (sec)</label>
+            <input type="number" id="stress-duration" value="10" min="5" max="30" step="5">
+          </div>
+          <div class="stress-btns">
+            <button id="stress-start" class="stress-btn start-btn">⚡ Launch Attack</button>
+            <button id="stress-stop" class="stress-btn stop-btn" disabled>⛔ Stop</button>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="stress-progress-track">
+          <div class="stress-progress-fill" id="stress-progress"></div>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="stress-stats">
+          <div class="stat-box">
+            <span class="stat-label">Sent</span>
+            <span class="stat-value" id="stat-sent">0</span>
+          </div>
+          <div class="stat-box stat-success">
+            <span class="stat-label">✅ Passed</span>
+            <span class="stat-value" id="stat-success">0</span>
+          </div>
+          <div class="stat-box stat-blocked">
+            <span class="stat-label">🛡️ Blocked</span>
+            <span class="stat-value" id="stat-blocked">0</span>
+          </div>
+          <div class="stat-box stat-error">
+            <span class="stat-label">💥 Errors</span>
+            <span class="stat-value" id="stat-errors">0</span>
+          </div>
+        </div>
+
+        <!-- Result Bar Visualization -->
+        <div class="stress-bar-container">
+          <div class="stress-bar-fill bar-success" id="bar-success"></div>
+          <div class="stress-bar-fill bar-blocked" id="bar-blocked"></div>
+          <div class="stress-bar-fill bar-errors" id="bar-errors"></div>
+        </div>
+        <div class="stress-bar-legend">
+          <span><span class="legend-dot" style="background:#4caf50"></span> Passed</span>
+          <span><span class="legend-dot" style="background:#ffd54f"></span> Rate Limited</span>
+          <span><span class="legend-dot" style="background:#ff5252"></span> Errors</span>
+        </div>
+
+        <!-- Verdict -->
+        <div class="verdict" id="stress-verdict" style="display:none"></div>
+
+        <!-- Log Console -->
+        <div class="stress-log-container">
+          <div class="log-header">📋 Attack Log</div>
+          <div class="stress-log" id="stress-log">
+            <div class="log-line log-info">Ready. Enter your NodeMCU IP and press "Launch Attack".</div>
+          </div>
+        </div>
+      </div>
     </div>
+
+
   </main>
 
   <script src="js/font.js"></script>
@@ -421,6 +595,7 @@
   <script src="js/soil.js"></script>
   <script src="js/logic.js"></script>
   <script src="js/chart.js"></script>
+  <script src="js/security.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

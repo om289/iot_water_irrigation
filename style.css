@@ -476,6 +476,350 @@ body {
   border: 1px solid var(--border-card);
 }
 
+/* ============================================
+   CYBER SECURITY SECTION
+   ============================================ */
+
+/* Threat Cards Grid */
+.threat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 2rem;
+}
+
+.threat-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: var(--transition);
+}
+.threat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.threat-critical { border-left: 3px solid #ff1744; }
+.threat-high { border-left: 3px solid #ff6d00; }
+.threat-medium { border-left: 3px solid #ffd54f; }
+.threat-low { border-left: 3px solid #69f0ae; }
+
+.threat-icon { font-size: 2rem; flex-shrink: 0; }
+.threat-info h5 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+.threat-info p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin-top: 0.5rem; }
+
+.threat-level {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.threat-level.critical { background: rgba(255, 23, 68, 0.15); color: #ff1744; }
+.threat-level.high { background: rgba(255, 109, 0, 0.15); color: #ff6d00; }
+.threat-level.medium { background: rgba(255, 213, 79, 0.15); color: #ffd54f; }
+.threat-level.low { background: rgba(105, 240, 174, 0.15); color: #69f0ae; }
+
+/* Security Measures */
+.security-measures { margin: 1rem 0 2rem; }
+
+.measure-item {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: var(--transition);
+}
+.measure-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0, 230, 118, 0.15);
+}
+
+.measure-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green-dim), rgba(0, 230, 118, 0.25));
+  color: var(--green-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 230, 118, 0.2);
+}
+
+.measure-content h5 { font-size: 0.95rem; font-weight: 600; color: var(--green-light); margin-bottom: 0.4rem; }
+.measure-content p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+.measure-content code {
+  background: rgba(0, 230, 118, 0.1);
+  color: var(--green-primary);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.code-snippet {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border-left: 2px solid var(--green-dim);
+}
+.code-snippet code {
+  font-size: 0.72rem;
+  color: var(--green-light);
+  background: none;
+  padding: 0;
+}
+
+/* Stress Test Panel */
+.stress-test-panel {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 82, 82, 0.15);
+  border-radius: var(--radius);
+}
+
+.stress-config {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.config-field label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.config-field input {
+  width: 120px;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition);
+}
+.config-field input:focus {
+  border-color: var(--red-primary);
+  box-shadow: 0 0 0 3px rgba(255, 82, 82, 0.15);
+}
+
+.stress-btns {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.stress-btn {
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.stress-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stress-btn.start-btn {
+  background: linear-gradient(135deg, #ff5252, #d50000);
+  color: white;
+}
+.stress-btn.start-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(255, 82, 82, 0.3);
+}
+
+.stress-btn.stop-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.stress-btn.stop-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Progress Bar */
+.stress-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.stress-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff5252, #ff1744);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 82, 82, 0.5);
+}
+
+/* Live Stats */
+.stress-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.stat-box.stat-success .stat-value { color: #4caf50; }
+.stat-box.stat-blocked .stat-value { color: #ffd54f; }
+.stat-box.stat-error .stat-value { color: #ff5252; }
+
+/* Result Bar */
+.stress-bar-container {
+  display: flex;
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 0.5rem;
+}
+
+.stress-bar-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+  min-width: 0;
+}
+.bar-success { background: linear-gradient(90deg, #388e3c, #4caf50); }
+.bar-blocked { background: linear-gradient(90deg, #f9a825, #ffd54f); }
+.bar-errors { background: linear-gradient(90deg, #c62828, #ff5252); }
+
+.stress-bar-legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Verdict */
+.verdict {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+  animation: fadeIn 0.4s ease;
+}
+.verdict-protected {
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  color: #69f0ae;
+}
+.verdict-partial {
+  background: rgba(255, 213, 79, 0.12);
+  border: 1px solid rgba(255, 213, 79, 0.3);
+  color: #ffd54f;
+}
+.verdict-vulnerable {
+  background: rgba(255, 82, 82, 0.12);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  color: #ff5252;
+}
+
+/* Attack Log Console */
+.stress-log-container {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.log-header {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.stress-log {
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.8;
+}
+
+.log-line { padding: 1px 0; }
+.log-info { color: var(--text-secondary); }
+.log-success { color: #69f0ae; }
+.log-warning { color: #ffd54f; }
+.log-error { color: #ff5252; }
+.log-divider { color: rgba(255, 255, 255, 0.1); }
+
 /* --- Scrollbar --- */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

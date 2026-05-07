@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startSoilUpdates();
   startLogicEngine();
   startChartUpdates();
+  initSecurityPanel();
 
   console.log('🌱 SmartPlant System initialized!');
 });

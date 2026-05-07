@@ -1,6 +1,7 @@
 // ============================================
 // SmartPlant - NodeMCU ESP8266 Controller
 // Handles: WiFi, Weather API, LED Matrix, Serial to Arduino
+// ** WITH SECURITY: Rate Limiting, IP Blacklisting, Input Validation **
 // ============================================
 
 #include <ESP8266WiFi.h>
@@ -49,9 +50,119 @@ int currentMsg = 0;
 unsigned long lastWeatherFetch = 0;
 unsigned long lastSerialComm = 0;
 
+// ============================================
+// SECURITY: Rate Limiting & IP Blacklisting
+// ============================================
+#define MAX_CLIENTS       8      // Track up to 8 unique IPs (ESP8266 RAM is limited)
+#define RATE_WINDOW       60000  // 60 seconds window
+#define MAX_REQUESTS      30     // Max 30 requests per window per IP
+#define BLACKLIST_AFTER   3      // Blacklist after 3 rate-limit violations
+#define BLACKLIST_DURATION 300000 // 5 minutes blacklist
+
+struct ClientTracker {
+  IPAddress ip;
+  unsigned long windowStart;
+  int requestCount;
+  int violations;
+  unsigned long blacklistedUntil;
+  bool active;
+};
+
+ClientTracker clients[MAX_CLIENTS];
+unsigned long totalBlocked = 0;
+unsigned long totalRequests = 0;
+
+// Find or create a tracker for this IP
+int getClientSlot(IPAddress ip) {
+  int emptySlot = -1;
+  unsigned long oldest = millis();
+  int oldestSlot = 0;
+
+  for (int i = 0; i < MAX_CLIENTS; i++) {
+    if (clients[i].active && clients[i].ip == ip) return i;
+    if (!clients[i].active && emptySlot == -1) emptySlot = i;
+    if (clients[i].windowStart < oldest) {
+      oldest = clients[i].windowStart;
+      oldestSlot = i;
+    }
+  }
+
+  // Use empty slot or evict oldest
+  int slot = (emptySlot != -1) ? emptySlot : oldestSlot;
+  clients[slot].ip = ip;
+  clients[slot].windowStart = millis();
+  clients[slot].requestCount = 0;
+  clients[slot].violations = 0;
+  clients[slot].blacklistedUntil = 0;
+  clients[slot].active = true;
+  return slot;
+}
+
+// Returns true if request is ALLOWED, false if BLOCKED
+bool checkRateLimit(IPAddress ip) {
+  totalRequests++;
+  int slot = getClientSlot(ip);
+  ClientTracker &c = clients[slot];
+
+  // Check blacklist
+  if (c.blacklistedUntil > 0 && millis() < c.blacklistedUntil) {
+    totalBlocked++;
+    return false; // BLOCKED — IP is blacklisted
+  } else if (c.blacklistedUntil > 0 && millis() >= c.blacklistedUntil) {
+    // Blacklist expired, reset
+    c.blacklistedUntil = 0;
+    c.violations = 0;
+    c.requestCount = 0;
+    c.windowStart = millis();
+  }
+
+  // Reset window if expired
+  if (millis() - c.windowStart > RATE_WINDOW) {
+    c.requestCount = 0;
+    c.windowStart = millis();
+  }
+
+  c.requestCount++;
+
+  // Check rate limit
+  if (c.requestCount > MAX_REQUESTS) {
+    c.violations++;
+    totalBlocked++;
+
+    // Auto-blacklist after repeated violations
+    if (c.violations >= BLACKLIST_AFTER) {
+      c.blacklistedUntil = millis() + BLACKLIST_DURATION;
+      Serial.println("BLACKLISTED IP: " + ip.toString() + " for 5 minutes");
+    }
+    return false; // BLOCKED — rate limited
+  }
+
+  return true; // ALLOWED
+}
+
+// Sanitize user input (remove control characters, limit length)
+String sanitizeInput(String input, int maxLen) {
+  if ((int)input.length() > maxLen) {
+    input = input.substring(0, maxLen);
+  }
+  String clean = "";
+  for (unsigned int i = 0; i < input.length(); i++) {
+    char c = input.charAt(i);
+    if (c >= 32 && c < 127) { // Only printable ASCII
+      clean += c;
+    }
+  }
+  return clean;
+}
+
 void setup() {
   Serial.begin(115200);
   arduinoSerial.begin(9600);
+
+  // Initialize rate limit tracker
+  for (int i = 0; i < MAX_CLIENTS; i++) {
+    clients[i].active = false;
+  }
   
   // Initialize LED Matrix
   display.begin();
@@ -73,8 +184,22 @@ void setup() {
     Serial.println("\nWiFi Connected! IP: " + WiFi.localIP().toString());
     
     // --- Setup API Endpoints for Dashboard ---
+
+    // GET /api/data — Return sensor data (rate limited)
     server.on("/api/data", HTTP_GET, []() {
+      IPAddress clientIP = server.client().remoteIP();
       server.sendHeader("Access-Control-Allow-Origin", "*");
+      
+      if (!checkRateLimit(clientIP)) {
+        int slot = getClientSlot(clientIP);
+        if (clients[slot].blacklistedUntil > 0 && millis() < clients[slot].blacklistedUntil) {
+          server.send(403, "text/plain", "Forbidden - IP blacklisted");
+        } else {
+          server.send(429, "text/plain", "Too Many Requests - Rate limited");
+        }
+        return;
+      }
+
       String json = "{";
       json += "\"soil\":" + String(soilMoisture) + ",";
       json += "\"temp\":" + String(temperature) + ",";
@@ -85,28 +210,79 @@ void setup() {
       server.send(200, "application/json", json);
     });
     
+    // POST /api/water — Trigger pump (rate limited)
     server.on("/api/water", HTTP_POST, []() {
+      IPAddress clientIP = server.client().remoteIP();
       server.sendHeader("Access-Control-Allow-Origin", "*");
+      
+      if (!checkRateLimit(clientIP)) {
+        server.send(429, "text/plain", "Too Many Requests");
+        return;
+      }
+
       shouldWater = true;
       sendCommandToArduino(); // Tell Arduino to run pump
       server.send(200, "text/plain", "Watering triggered by Dashboard!");
     });
 
+    // POST /api/auto — Set auto mode (validated input)
     server.on("/api/auto", HTTP_POST, []() {
+      IPAddress clientIP = server.client().remoteIP();
       server.sendHeader("Access-Control-Allow-Origin", "*");
-      if (server.hasArg("state")) {
-        autoMode = (server.arg("state") == "true");
+      
+      if (!checkRateLimit(clientIP)) {
+        server.send(429, "text/plain", "Too Many Requests");
+        return;
       }
-      server.send(200, "text/plain", autoMode ? "Auto ON" : "Auto OFF");
+
+      if (server.hasArg("state")) {
+        String state = server.arg("state");
+        // Input validation: only accept "true" or "false"
+        if (state == "true" || state == "false") {
+          autoMode = (state == "true");
+          server.send(200, "text/plain", autoMode ? "Auto ON" : "Auto OFF");
+        } else {
+          server.send(400, "text/plain", "Invalid state value");
+        }
+      } else {
+        server.send(400, "text/plain", "Missing 'state' parameter");
+      }
     });
 
+    // POST /api/message — Set custom LED message (sanitized input)
     server.on("/api/message", HTTP_POST, []() {
+      IPAddress clientIP = server.client().remoteIP();
       server.sendHeader("Access-Control-Allow-Origin", "*");
-      if (server.hasArg("text")) {
-        customMessage = server.arg("text");
-        updateMessages(); // Refresh the scroll queue immediately
+      
+      if (!checkRateLimit(clientIP)) {
+        server.send(429, "text/plain", "Too Many Requests");
+        return;
       }
-      server.send(200, "text/plain", "Message received");
+
+      if (server.hasArg("text")) {
+        String rawText = server.arg("text");
+        // Sanitize: limit to 100 chars, only printable ASCII
+        customMessage = sanitizeInput(rawText, 100);
+        updateMessages(); // Refresh the scroll queue immediately
+        server.send(200, "text/plain", "Message received (sanitized)");
+      } else {
+        server.send(400, "text/plain", "Missing 'text' parameter");
+      }
+    });
+
+    // GET /api/security — Report security stats (for dashboard)
+    server.on("/api/security", HTTP_GET, []() {
+      server.sendHeader("Access-Control-Allow-Origin", "*");
+      
+      String json = "{";
+      json += "\"totalRequests\":" + String(totalRequests) + ",";
+      json += "\"totalBlocked\":" + String(totalBlocked) + ",";
+      json += "\"rateLimitPerIP\":" + String(MAX_REQUESTS) + ",";
+      json += "\"windowSeconds\":" + String(RATE_WINDOW / 1000) + ",";
+      json += "\"blacklistMinutes\":" + String(BLACKLIST_DURATION / 60000) + ",";
+      json += "\"activeClients\":" + String(countActiveClients());
+      json += "}";
+      server.send(200, "application/json", json);
     });
 
     // Handle CORS Preflight for the browser
@@ -122,12 +298,20 @@ void setup() {
     });
 
     server.begin();
-    Serial.println("Web Server Started!");
+    Serial.println("Web Server Started (with security protections)!");
   } else {
     Serial.println("\nWiFi FAILED - running offline mode");
   }
   
   fetchWeather();
+}
+
+int countActiveClients() {
+  int count = 0;
+  for (int i = 0; i < MAX_CLIENTS; i++) {
+    if (clients[i].active) count++;
+  }
+  return count;
 }
 
 void loop() {
@@ -175,7 +359,7 @@ void fetchWeather() {
       weatherCode = doc["current"]["weather_code"];
       uvIndex = doc["daily"]["uv_index_max"][0];
       rainForecast = doc["daily"]["precipitation_sum"][1];
-      Serial.println("Weather OK: " + String(temperature) + "°C, Rain: " + String(rain) + "mm");
+      Serial.println("Weather OK: " + String(temperature) + "C, Rain: " + String(rain) + "mm");
     }
   } else {
     Serial.println("Weather HTTP error: " + String(httpCode));
