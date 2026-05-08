@@ -1,4 +1,4 @@
-﻿/* Styles updated Jun 2026 */
+/* Styles updated Jun 2026 */
 /* ============================================
    SmartPlant - Weather-Aware Plant System
    Premium Dark Nature Theme
@@ -218,8 +218,25 @@ body {
 .detail span:last-child { font-weight: 600; font-family: var(--font-mono); font-size: 0.8rem; }
 
 /* Soil Gauge */
-.gauge-container { display: flex; justify-content: center; margin: 0.5rem 0; }
-.gauge { width: 160px; height: 160px; }
+.gauge-container {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0;
+  position: relative;
+}
+.gauge {
+  width: 160px;
+  height: 160px;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.gauge:hover {
+  transform: scale(1.08);
+}
+.gauge:hover .gauge-fill {
+  filter: drop-shadow(0 0 12px var(--green-primary));
+  stroke-width: 14;
+}
 .gauge-bg {
   fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 12;
   stroke-dasharray: 502; stroke-dashoffset: 125;
@@ -231,12 +248,16 @@ body {
   stroke-dasharray: 502; stroke-dashoffset: 502;
   transform: rotate(135deg); transform-origin: center;
   stroke-linecap: round;
-  transition: stroke-dashoffset 1s ease, stroke 0.5s ease;
+  transition: stroke-dashoffset 1s ease, stroke 0.5s ease, stroke-width 0.3s ease, filter 0.3s ease;
   filter: drop-shadow(0 0 6px rgba(0, 230, 118, 0.4));
 }
 .gauge-text {
   fill: var(--text-primary); font-size: 2.2rem; font-weight: 700;
   text-anchor: middle; font-family: var(--font-mono);
+  transition: fill 0.3s ease;
+}
+.gauge:hover .gauge-text {
+  fill: var(--green-light);
 }
 .gauge-label {
   fill: var(--text-muted); font-size: 0.65rem; font-weight: 500;
