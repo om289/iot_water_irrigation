@@ -1,3 +1,4 @@
+﻿/* IoT Water Irrigation Backend Server - Updated May 2026 */
 // SmartPlant - Main App Entry Point
 // Ties all modules together
 
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startLogicEngine();
   startChartUpdates();
 
-  console.log('🌱 SmartPlant System initialized!');
+  console.log('ðŸŒ± SmartPlant System initialized!');
 });
 
 // Fill the build guide with Arduino code snippets
@@ -301,3 +302,4 @@ void stopPump() {
 }`;
   }
 }
+
