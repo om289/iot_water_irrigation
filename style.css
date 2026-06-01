@@ -293,7 +293,19 @@ body {
   border-left: 3px solid var(--green-primary);
 }
 
-.decision-badge { font-size: 0.6rem; }
+@keyframes gradient-breath {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.card.active-state {
+  background: linear-gradient(135deg, rgba(14, 30, 22, 0.85), rgba(20, 50, 35, 0.85), rgba(14, 30, 22, 0.85)) !important;
+  background-size: 200% 200% !important;
+  animation: gradient-breath 8s ease infinite;
+  border-color: rgba(0, 230, 118, 0.35) !important;
+  box-shadow: 0 0 25px rgba(0, 230, 118, 0.15) !important;
+}
 
 /* Pump Control */
 .pump-controls {
