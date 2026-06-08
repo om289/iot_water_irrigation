@@ -187,6 +187,18 @@
         </div>
       </div>
 
+      <!-- System Logs Console Card -->
+      <div class="card logs-card" id="logs-card">
+        <div class="card-header">
+          <h3>🖥️ Real-time System Logs</h3>
+          <button id="clear-logs-btn" style="background: none; border: none; color: var(--red-primary); cursor: pointer; font-size: 0.8rem; font-weight: bold;">Clear</button>
+        </div>
+        <div class="logs-console" id="logs-console" style="background: #000; border-radius: var(--radius-sm); border: 1px solid var(--border-card); height: 160px; overflow-y: auto; padding: 10px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.5; color: #a5d6a7;">
+          <div class="log-entry" style="color: var(--text-muted);">[System] Booting SmartPlant logic engine...</div>
+          <div class="log-entry" style="color: var(--text-muted);">[System] Listening for incoming NodeMCU serial packets...</div>
+        </div>
+      </div>
+
     </section>
   </main>
 
